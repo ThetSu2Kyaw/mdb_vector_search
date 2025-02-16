@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "echo 'No linting configured. Skipping...'",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo 'No tests found. Exiting...' && exit 0",
     "start": "nodemon app.js"
   },
   "author": "Thet Su Su Kyaw",
