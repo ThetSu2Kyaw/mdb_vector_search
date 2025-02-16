@@ -1,22 +1,57 @@
 pipeline {
     agent any
+
+    environment {
+        NODE_ENV = 'production'
+    }
+
     stages {
-        stage("build") {
+        stage('Checkout Code') {
             steps {
-                echo 'Hello Jenkins'
+                checkout scm
             }
         }
 
-        stage("test") {
+        stage('Install Dependencies') {
             steps {
-                sh 'echo "testing the application..."'
+                sh 'npm install'
             }
         }
 
-        stage("deploy") {
+        stage('Lint') {
             steps {
-               sh 'echo "deploying the application..."'
+                sh 'npm run lint || echo "Linting errors found!"'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'npm test'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'echo "Deploying application..."'
+                // Example: Restart app with PM2
+                sh 'pm2 restart app || pm2 start npm --name "express-app" -- run start'
             }
         }
     }
+
+    post {
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Pipeline failed. Check logs for details.'
+        }
+    }
 }
+
