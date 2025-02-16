@@ -16,7 +16,7 @@ app.use(express.json());
 // MongoDB connection
 let collection;
 
-(async () => {
+async function connectMongoDB() {
     try {
         const client = new MongoClient(process.env.ATLAS_CONNECTION_STRING);
         await client.connect();
@@ -27,7 +27,7 @@ let collection;
         console.error('Failed to connect to MongoDB:', error);
         process.exit(1); // Exit the application if the connection fails
     }
-})();
+}
 
 // Define the search endpoint
 app.post('/search', async (req, res) => {
@@ -117,7 +117,13 @@ app.post('/create', async (req, res) => {
     }
 });
 
-// Start the server
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-});
+// Start the server after MongoDB connection is established
+async function startServer() {
+    await connectMongoDB(); // Ensure MongoDB is connected before starting the server
+    app.listen(port, () => {
+        console.log(`Server is running on http://localhost:${port}`);
+    });
+}
+
+// Start the application
+startServer();
