@@ -5,7 +5,7 @@
   "scripts": {
     "lint": "echo 'No linting configured. Skipping...'",
     "test": "echo 'No tests found. Exiting...' && exit 0",
-    "build": "echo 'No build step needed for Express.js. Skipping...'",
+    "build": "echo 'No build step needed for an Express.js. Skipping...'",
     "start": "nodemon app.js"
   },
   "author": "Thet Su Su Kyaw",
