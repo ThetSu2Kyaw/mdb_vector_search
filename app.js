@@ -121,7 +121,7 @@ app.post('/create', async (req, res) => {
 async function startServer() {
     await connectMongoDB(); // Ensure MongoDB is connected before starting the server
     app.listen(port, '0.0.0.0', () => {
-        console.log(`Server is running on http://0.0.0.0:${port}`);
+        console.log(`The server is running on http://0.0.0.0:${port}`);
     });
 }
 
