@@ -39,11 +39,12 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
+                    // Debugging: Print SSH key path
+                    echo "Using SSH key: ${SSH_KEY_PATH}"
+
                     // Ensure SSH agent is running and key is loaded for secure connections
-                    sh '''
-                        eval $(ssh-agent -s)
-                        ssh-add /home/jenkins/.ssh/id_rsa  // Use the Jenkins user's private SSH key
-                    '''
+                    sh 'eval $(ssh-agent -s)'  // Start SSH agent
+                    sh 'ssh-add /home/jenkins/.ssh/id_rsa'  // Add the SSH key
 
                     // Deploy to the remote server with simpler commands
                     sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'which pm2 || npm install -g pm2'"
