@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         NODE_ENV = 'production'
-        REMOTE_SERVER = 'root@167.99.79.177' // Update with your remote server user
-        REMOTE_DIR = '/root/mdb_vector_search' // Update with your app's directory on the remote server
+        REMOTE_SERVER = 'root@167.99.79.177' 
+        REMOTE_DIR = '/root/mdb_vector_search' 
     }
 
     stages {
