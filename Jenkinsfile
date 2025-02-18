@@ -39,16 +39,19 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Debugging: Print SSH key path
-                    echo "Using SSH key: ${SSH_KEY_PATH}"
-
                     // Ensure SSH agent is running and key is loaded for secure connections
-                    sh 'eval $(ssh-agent -s)'  // Start SSH agent
-                    sh 'ssh-add /home/jenkins/.ssh/id_rsa'  // Add the SSH key
-
-                    // Deploy to the remote server with simpler commands
+                    sh '''
+                        eval $(ssh-agent -s)
+                        ssh-add ${SSH_KEY_PATH}
+                    '''
+        
+                    // Deploy the application to the remote server using separate SSH commands
                     sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'which pm2 || npm install -g pm2'"
-                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'cd ${REMOTE_DIR} && git stash && git pull origin main && npm install && pm2 restart app || pm2 start npm --name \"mdb_vector_search\" -- run start'"
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'cd ${REMOTE_DIR} || { echo \"Failed to cd to ${REMOTE_DIR}\"; exit 1; }'"
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'git stash || { echo \"Git stash failed\"; exit 1; }'"
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'git pull origin main || { echo \"Git pull failed\"; exit 1; }'"
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'npm install || { echo \"npm install failed\"; exit 1; }'"
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'pm2 restart app || pm2 start npm --name \"mdb_vector_search\" -- run start || { echo \"pm2 start failed\"; exit 1; }'"
                 }
             }
         }
