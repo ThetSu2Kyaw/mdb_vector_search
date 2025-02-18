@@ -45,33 +45,13 @@ pipeline {
                         ssh-add /home/jenkins/.ssh/id_rsa  // Use the Jenkins user's private SSH key
                     '''
 
-                    // Deploy the application to the remote server using individual sh steps
-                    sh 'echo "Deploying application to remote server..."'
-
-                    // SSH into the remote server and execute commands
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "which pm2 || npm install -g pm2"
-                    """
-
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "cd ${REMOTE_DIR} || { echo 'Failed to cd to ${REMOTE_DIR}'; exit 1; }"
-                    """
-
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "git stash || { echo 'Git stash failed'; exit 1; }"
-                    """
-
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "git pull origin main || { echo 'Git pull failed'; exit 1; }"
-                    """
-
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "npm install || { echo 'npm install failed'; exit 1; }"
-                    """
-
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "pm2 restart app || pm2 start npm --name 'mdb_vector_search' -- run start || { echo 'pm2 start failed'; exit 1; }"
-                    """
+                    // Deploy the application to the remote server using separate SSH commands
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'which pm2 || npm install -g pm2'"
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'cd ${REMOTE_DIR} || { echo \"Failed to cd to ${REMOTE_DIR}\"; exit 1; }'"
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'git stash || { echo \"Git stash failed\"; exit 1; }'"
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'git pull origin main || { echo \"Git pull failed\"; exit 1; }'"
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'npm install || { echo \"npm install failed\"; exit 1; }'"
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'pm2 restart app || pm2 start npm --name \"mdb_vector_search\" -- run start || { echo \"pm2 start failed\"; exit 1; }'"
                 }
             }
         }
