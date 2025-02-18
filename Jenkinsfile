@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        NODE_ENV = 'production'
-        REMOTE_SERVER = 'root@167.99.79.177'
-        REMOTE_DIR = '/root/mdb_vector_search'
-        SSH_KEY_PATH = '/root/.ssh/id_rsa'  // path to private key
+    NODE_ENV = 'production'
+    REMOTE_SERVER = 'root@167.99.79.177'
+    REMOTE_DIR = '/root/mdb_vector_search'
+    SSH_KEY_PATH = '/home/jenkins/.ssh/id_rsa'  // Updated path
     }
 
     stages {
