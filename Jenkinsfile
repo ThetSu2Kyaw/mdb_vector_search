@@ -44,27 +44,33 @@ pipeline {
                         eval $(ssh-agent -s)
                         ssh-add ${SSH_KEY_PATH}
                     '''
-        
-                    // Check if directory exists and is a git repo, if not clone it
+            
+                    // Deploy the application to the remote server
                     sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} '
                             if [ ! -d ${REMOTE_DIR}/.git ]; then
+                                echo "Cloning repository..."
                                 rm -rf ${REMOTE_DIR}
-                                git clone \$(git remote get-url origin) ${REMOTE_DIR}
+                                git clone https://github.com/ThetSu2Kyaw/mdb_vector_search.git ${REMOTE_DIR}
                             fi
                         '
                     """
-                    
-                    // Deploy the application to the remote server using separate SSH commands
+        
+                    // Ensure pm2 is installed and the app is running
                     sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'which pm2 || npm install -g pm2'"
-                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'cd ${REMOTE_DIR} || { echo \"Failed to cd to ${REMOTE_DIR}\"; exit 1; }'"
-                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'git stash || { echo \"Git stash failed\"; exit 1; }'"
-                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'git pull origin main || { echo \"Git pull failed\"; exit 1; }'"
-                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'npm install || { echo \"npm install failed\"; exit 1; }'"
-                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'pm2 restart app || pm2 start npm --name \"mdb_vector_search\" -- run start || { echo \"pm2 start failed\"; exit 1; }'"
+        
+                    // Pull the latest changes if repository exists
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'cd ${REMOTE_DIR} && git pull origin main'"
+        
+                    // Install dependencies
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'cd ${REMOTE_DIR} && npm install'"
+        
+                    // Start or restart the application with pm2
+                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'cd ${REMOTE_DIR} && pm2 restart app || pm2 start npm --name \"mdb_vector_search\" -- run start'"
                 }
             }
         }
+
     }
 
     post {
