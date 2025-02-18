@@ -53,10 +53,10 @@ pipeline {
 
                     // Deploy to the remote server
                     sh """
-                        echo "Deploying application to remote server..."
+                        echo 'Deploying application to remote server...'
 
                         # SSH into the remote server and execute commands
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} << 'EOF'
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} <<EOF
                             # Ensure pm2 is installed
                             which pm2 || npm install -g pm2
 
