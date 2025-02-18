@@ -48,7 +48,7 @@ pipeline {
                     // Ensure SSH agent is running and key is loaded
                     sh '''
                         eval $(ssh-agent -s)
-                        ssh-add /home/jenkins/.ssh/id_rsa  // Use Jenkins user's private key
+                        ssh-add /home/jenkins/.ssh/id_rsa
                     '''
 
                     // Deploy to the remote server
