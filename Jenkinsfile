@@ -5,75 +5,78 @@ pipeline {
         NODE_ENV = 'production'
         REMOTE_SERVER = 'root@167.99.79.177'
         REMOTE_DIR = '/root/mdb_vector_search'
-        SSH_KEY_PATH = '/home/jenkins/.ssh/id_rsa'  // Updated path for Jenkins user
+        SSH_KEY_PATH = '/home/jenkins/.ssh/id_rsa'  // Path for Jenkins user SSH key
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                checkout scm
+                checkout scm  // Checkout the latest code from the repository
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'which node'
-                sh 'node -v'
-                sh 'npm -v'
-                sh 'npm install'
+                sh 'which node'  // Verify node is installed
+                sh 'node -v'  // Print the node version
+                sh 'npm -v'  // Print the npm version
+                sh 'npm install'  // Install the necessary node dependencies
             }
         }
 
         stage('Lint') {
             steps {
-                sh 'npm run lint || echo "Linting errors found!"'
+                sh 'npm run lint || echo "Linting errors found!"'  // Run linting, output errors if any
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'npm test'
+                sh 'npm test'  // Run the tests for the application
             }
         }
 
         stage('Build') {
             steps {
-                sh 'npm run build'
+                sh 'npm run build'  // Build the application if necessary
             }
         }
 
         stage('Deploy') {
             steps {
                 script {
-                    // Ensure SSH agent is running and key is loaded
+                    // Ensure SSH agent is running and key is loaded for secure connections
                     sh '''
                         eval $(ssh-agent -s)
-                        ssh-add /home/jenkins/.ssh/id_rsa
+                        ssh-add /home/jenkins/.ssh/id_rsa  // Use the Jenkins user's private SSH key
                     '''
 
-                    // Deploy to the remote server
+                    // Deploy the application to the remote server using individual sh steps
+                    sh 'echo "Deploying application to remote server..."'
+
+                    // SSH into the remote server and execute commands
                     sh """
-                        echo 'Deploying application to remote server...'
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "which pm2 || npm install -g pm2"
+                    """
 
-                        # SSH into the remote server and execute commands
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} <<EOF
-                            # Ensure pm2 is installed
-                            which pm2 || npm install -g pm2
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "cd ${REMOTE_DIR} || { echo 'Failed to cd to ${REMOTE_DIR}'; exit 1; }"
+                    """
 
-                            cd ${REMOTE_DIR} || { echo "Failed to cd to ${REMOTE_DIR}"; exit 1; }
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "git stash || { echo 'Git stash failed'; exit 1; }"
+                    """
 
-                            # Stash any local changes before pulling
-                            git stash || { echo "Git stash failed"; exit 1; }
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "git pull origin main || { echo 'Git pull failed'; exit 1; }"
+                    """
 
-                            # Pull the latest changes from the main branch
-                            git pull origin main || { echo "Git pull failed"; exit 1; }
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "npm install || { echo 'npm install failed'; exit 1; }"
+                    """
 
-                            # Install dependencies after pulling
-                            npm install || { echo "npm install failed"; exit 1; }
-
-                            # Restart or start the application with pm2
-                            pm2 restart app || pm2 start npm --name "mdb_vector_search" -- run start || { echo "pm2 start failed"; exit 1; }
-                        EOF
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "pm2 restart app || pm2 start npm --name 'mdb_vector_search' -- run start || { echo 'pm2 start failed'; exit 1; }"
                     """
                 }
             }
@@ -82,10 +85,10 @@ pipeline {
 
     post {
         success {
-            echo 'Deployment successful!'
+            echo 'Deployment successful!'  // Success message after deployment
         }
         failure {
-            echo 'Pipeline failed. Check logs for details.'
+            echo 'Pipeline failed. Check logs for details.'  // Failure message if the pipeline fails
         }
     }
 }
