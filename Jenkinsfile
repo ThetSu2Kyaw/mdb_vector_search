@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-    NODE_ENV = 'production'
-    REMOTE_SERVER = 'root@167.99.79.177'
-    REMOTE_DIR = '/root/mdb_vector_search'
-    SSH_KEY_PATH = '/home/jenkins/.ssh/id_rsa'  // Updated path
+        NODE_ENV = 'production'
+        REMOTE_SERVER = 'root@167.99.79.177'
+        REMOTE_DIR = '/root/mdb_vector_search'
+        SSH_KEY_PATH = '/home/jenkins/.ssh/id_rsa'  // Updated path for Jenkins user
     }
 
     stages {
@@ -48,7 +48,7 @@ pipeline {
                     // Ensure SSH agent is running and key is loaded
                     sh '''
                         eval $(ssh-agent -s)
-                        ssh-add /root/.ssh/id_rsa
+                        ssh-add /home/jenkins/.ssh/id_rsa  // Use Jenkins user's private key
                     '''
 
                     // Deploy to the remote server
