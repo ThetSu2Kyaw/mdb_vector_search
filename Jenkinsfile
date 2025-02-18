@@ -43,7 +43,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sshagent(credentials: ['digital ocean']) {
+                sshagent(credentials: ['digital-ocean']) {
                     sh """
                         echo "Deploying application to remote server..."
                         ssh ${REMOTE_SERVER} <<EOF
