@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         NODE_ENV = 'production'
-        REMOTE_SERVER = 'root@167.99.79.177' 
-        REMOTE_DIR = '/root/mdb_vector_search' 
+        REMOTE_SERVER = 'root@167.99.79.177'
+        REMOTE_DIR = '/root/mdb_vector_search'
     }
 
     stages {
@@ -46,7 +46,14 @@ pipeline {
                 sshagent(credentials: ['digital-ocean']) {
                     sh """
                         echo "Deploying application to remote server..."
-                        ssh ${REMOTE_SERVER} <<EOF
+                        # Add debugging for SSH connection
+                        ssh -v ${REMOTE_SERVER} 'echo "SSH connection successful!"'
+
+                        # Deploy commands
+                        ssh ${REMOTE_SERVER} << 'EOF'
+                            # Ensure pm2 is installed
+                            which pm2 || npm install -g pm2
+                            
                             cd ${REMOTE_DIR} || exit
                             git pull origin main || exit
                             npm install || exit
@@ -67,5 +74,3 @@ pipeline {
         }
     }
 }
-
-
