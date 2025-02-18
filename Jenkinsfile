@@ -45,6 +45,16 @@ pipeline {
                         ssh-add ${SSH_KEY_PATH}
                     '''
         
+                    // Check if directory exists and is a git repo, if not clone it
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} '
+                            if [ ! -d ${REMOTE_DIR}/.git ]; then
+                                rm -rf ${REMOTE_DIR}
+                                git clone \$(git remote get-url origin) ${REMOTE_DIR}
+                            fi
+                        '
+                    """
+                    
                     // Deploy the application to the remote server using separate SSH commands
                     sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'which pm2 || npm install -g pm2'"
                     sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'cd ${REMOTE_DIR} || { echo \"Failed to cd to ${REMOTE_DIR}\"; exit 1; }'"
