@@ -45,7 +45,13 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Use ssh key instead of sshpass
+                    // Ensure SSH agent is running and key is loaded
+                    sh '''
+                        eval $(ssh-agent -s)
+                        ssh-add /root/.ssh/id_rsa
+                    '''
+
+                    // Deploy to the remote server
                     sh """
                         echo "Deploying application to remote server..."
 
