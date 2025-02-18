@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         NODE_ENV = 'production'
+        REMOTE_SERVER = 'root@167.99.79.177' // Update with your remote server user
+        REMOTE_DIR = '/root/mdb_vector_search' // Update with your app's directory on the remote server
     }
 
     stages {
@@ -14,9 +16,9 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-		sh 'which node'
-		sh 'node -v'
-		sh 'npm -v'
+                sh 'which node'
+                sh 'node -v'
+                sh 'npm -v'
                 sh 'npm install'
             }
         }
@@ -41,9 +43,17 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh 'echo "Deploying application..."'
-                // Example: Restart app with PM2
-                sh 'pm2 restart app || pm2 start npm --name "express-app" -- run start'
+                sshagent(credentials: ['digital ocean']) {
+                    sh """
+                        echo "Deploying application to remote server..."
+                        ssh ${REMOTE_SERVER} <<EOF
+                            cd ${REMOTE_DIR} || exit
+                            git pull origin main || exit
+                            npm install || exit
+                            pm2 restart app || pm2 start npm --name "mdb_vector_search" -- run start || exit
+                        EOF
+                    """
+                }
             }
         }
     }
@@ -57,4 +67,5 @@ pipeline {
         }
     }
 }
+
 
