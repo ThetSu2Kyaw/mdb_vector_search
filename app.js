@@ -120,8 +120,8 @@ app.post('/create', async (req, res) => {
 // Start the server after MongoDB connection is established
 async function startServer() {
     await connectMongoDB(); // Ensure MongoDB is connected before starting the server
-    app.listen(port, () => {
-        console.log(`Server is running on http://localhost:${port}`);
+    app.listen(port, '0.0.0.0', () => {
+        console.log(`Server is running on http://0.0.0.0:${port}`);
     });
 }
 
