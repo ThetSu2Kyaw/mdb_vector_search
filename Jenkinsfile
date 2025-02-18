@@ -5,7 +5,7 @@ pipeline {
         NODE_ENV = 'production'
         REMOTE_SERVER = 'root@167.99.79.177'
         REMOTE_DIR = '/root/mdb_vector_search'
-        SSH_PASSPHRASE = 'your_ssh_key_passphrase' // Add your passphrase here (ensure it's kept secret)
+        SSH_PASSPHRASE = 'your_ssh_key_passphrase' 
     }
 
     stages {
