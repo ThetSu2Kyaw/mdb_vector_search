@@ -3,9 +3,7 @@ pipeline {
 
     environment {
         NODE_ENV = 'production'
-        REMOTE_SERVER = 'root@167.99.79.177'
-        REMOTE_DIR = '/root/mdb_vector_search'
-        SSH_KEY_PATH = '/home/jenkins/.ssh/id_rsa'  // Updated path for Jenkins user
+        PROJECT_DIR = '/home/jenkins/mdb_vector_search'  // Change this to your local project path
     }
 
     stages {
@@ -36,49 +34,45 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Build') {
+            steps {
+                sh 'npm run build'  // Build the application if needed
+            }
+        }
+
+        stage('Deploy (Local)') {
             steps {
                 script {
-                    // Ensure SSH agent is running and key is loaded for secure connections
-                    sh '''
-                        eval $(ssh-agent -s)
-                        ssh-add ${SSH_KEY_PATH}
-                    '''
-            
-                    // Deploy the application to the remote server
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} '
-                            if [ ! -d ${REMOTE_DIR}/.git ]; then
-                                echo "Cloning repository..."
-                                rm -rf ${REMOTE_DIR}
-                                git clone https://github.com/ThetSu2Kyaw/mdb_vector_search.git ${REMOTE_DIR}
-                            fi
-                        '
-                    """
-        
-                    // Ensure pm2 is installed and the app is running
-                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'which pm2 || npm install -g pm2'"
-        
-                    // Pull the latest changes if repository exists
-                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'cd ${REMOTE_DIR} && git pull origin main'"
-        
-                    // Install dependencies
-                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'cd ${REMOTE_DIR} && npm install'"
-        
-                    // Start or restart the application with pm2
-                    sh "ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} 'cd ${REMOTE_DIR} && pm2 restart app || pm2 start npm --name \"mdb_vector_search\" -- run start'"
+                    // Stop any running instance (if applicable)
+                    sh 'pkill -f "node server.js" || echo "No running process found"'
+
+                    // Start the application
+                    sh 'nohup npm start &'
                 }
             }
         }
 
+        stage('Health Check') {
+            steps {
+                script {
+                    def serverUp = sh(
+                        script: 'curl --silent --fail http://localhost:3000 || echo "Server not running"',
+                        returnStatus: true
+                    )
+                    if (serverUp != 0) {
+                        error("Server failed to start on http://localhost:3000")
+                    }
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo 'Deployment successful!'  // Success message after deployment
+            echo 'Application started successfully on http://localhost:3000 🎉'
         }
         failure {
-            echo 'Pipeline failed. Check logs for details.'  // Failure message if the pipeline fails
+            echo 'Pipeline failed. Check logs for details. ❌'
         }
     }
 }
