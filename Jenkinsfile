@@ -9,7 +9,14 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                checkout scm  // Checkout the latest code from the repository
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],  // Change 'main' to your actual branch
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/ThetSu2Kyaw/mdb_vector_search.git',
+                        credentialsId: 'github'  // Replace with your actual Jenkins credentials ID
+                    ]]
+                ])
             }
         }
 
