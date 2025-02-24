@@ -1,18 +1,26 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:18' // Use Node.js with Git preinstalled
+        }
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                script {
-                    sh 'rm -rf mdb_vector_search || true' // Cleanup
-                    sh 'git clone https://github.com/ThetSu2Kyaw/mdb_vector_search.git'
-                    sh 'cd mdb_vector_search && git checkout main'
-                }
+                git branch: 'main', url: 'https://github.com/ThetSu2Kyaw/mdb_vector_search.git'
             }
         }
+
         stage('Install Dependencies') {
             steps {
-                sh 'cd mdb_vector_search && npm install'
+                sh 'npm install'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'npm test'
             }
         }
     }
