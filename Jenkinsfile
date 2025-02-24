@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Cleanup') {
             steps {
-                sh 'rm -rf * || true'
+                deleteDir() // Properly cleans the workspace
             }
         }
         stage('Checkout') {
