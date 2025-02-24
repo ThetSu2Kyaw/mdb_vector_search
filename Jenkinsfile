@@ -1,26 +1,15 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18' // Use Node.js with Git preinstalled
-        }
+    agent any
+    environment {
+        WORKSPACE = '/var/jenkins_home/workspace/my-pipeline_main'
     }
-
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/ThetSu2Kyaw/mdb_vector_search.git'
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                sh 'npm install'
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                sh 'npm test'
+                dir("${WORKSPACE}") {
+                    sh 'rm -rf * || true'
+                    sh 'git clone https://github.com/ThetSu2Kyaw/mdb_vector_search.git .'
+                }
             }
         }
     }
