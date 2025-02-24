@@ -2,94 +2,54 @@ pipeline {
     agent any
 
     environment {
-        NODE_ENV = 'production'
-        PROJECT_DIR = '/www/mongodb/flymya-vector-search'  // Updated local project path
+        NODE_VERSION = '18' // Set your preferred Node.js version
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/main']],  // Change 'main' to your actual branch
-                    userRemoteConfigs: [[
-                        url: 'https://github.com/ThetSu2Kyaw/mdb_vector_search.git',
-                        credentialsId: 'github'  // Replace with your actual Jenkins credentials ID
-                    ]]
-                ])
+                git 'https://github.com/ThetSu2Kyaw/mdb_vector_search.git' // Replace with your repo URL
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                dir("${PROJECT_DIR}") {  // Navigate to project directory
-                    sh 'which node'  // Verify node is installed
-                    sh 'node -v'  // Print the node version
-                    sh 'npm -v'  // Print the npm version
-                    sh 'npm install'  // Install the necessary node dependencies
+                script {
+                    def nodeInstalled = sh(script: 'node -v', returnStatus: true) == 0
+                    if (!nodeInstalled) {
+                        error "Node.js is not installed on this Jenkins agent!"
+                    }
                 }
-            }
-        }
-
-        stage('Lint') {
-            steps {
-                dir("${PROJECT_DIR}") {
-                    sh 'npm run lint || echo "Linting errors found!"'  // Run linting, output errors if any
-                }
+                sh 'npm install'
             }
         }
 
         stage('Run Tests') {
             steps {
-                dir("${PROJECT_DIR}") {
-                    sh 'npm test'  // Run the tests for the application
-                }
+                sh 'npm test' // Make sure your package.json has a test script
             }
         }
 
         stage('Build') {
             steps {
-                dir("${PROJECT_DIR}") {
-                    sh 'npm run build'  // Build the application if needed
-                }
+                sh 'npm run build' // Modify this if you need a specific build step
             }
         }
 
-        stage('Deploy (Local)') {
+        stage('Deploy') {
             steps {
-                script {
-                    // Stop any running instance (if applicable)
-                    sh 'pkill -f "node" || echo "No running process found"'
-
-                    // Start the application
-                    dir("${PROJECT_DIR}") {
-                        sh 'nohup npm start &'
-                    }
-                }
-            }
-        }
-
-        stage('Health Check') {
-            steps {
-                script {
-                    def serverUp = sh(
-                        script: 'curl --silent --fail http://localhost:3000 || echo "Server not running"',
-                        returnStatus: true
-                    )
-                    if (serverUp != 0) {
-                        error("Server failed to start on http://localhost:3000")
-                    }
-                }
+                echo 'Deploy step (Modify as needed)' 
+                // Example: sh 'pm2 restart your-app'
             }
         }
     }
 
     post {
         success {
-            echo 'Application started successfully on http://localhost:3000 🎉'
+            echo 'Build completed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Check logs for details. ❌'
+            echo 'Build failed!'
         }
     }
 }
