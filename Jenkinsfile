@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         NODE_ENV = 'production'
-        PROJECT_DIR = '/home/jenkins/mdb_vector_search'  // Change this to your local project path
+        PROJECT_DIR = '/www/mongodb/flymya-vector-search'  // Updated local project path
     }
 
     stages {
@@ -15,28 +15,36 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'which node'  // Verify node is installed
-                sh 'node -v'  // Print the node version
-                sh 'npm -v'  // Print the npm version
-                sh 'npm install'  // Install the necessary node dependencies
+                dir("${PROJECT_DIR}") {  // Navigate to project directory
+                    sh 'which node'  // Verify node is installed
+                    sh 'node -v'  // Print the node version
+                    sh 'npm -v'  // Print the npm version
+                    sh 'npm install'  // Install the necessary node dependencies
+                }
             }
         }
 
         stage('Lint') {
             steps {
-                sh 'npm run lint || echo "Linting errors found!"'  // Run linting, output errors if any
+                dir("${PROJECT_DIR}") {
+                    sh 'npm run lint || echo "Linting errors found!"'  // Run linting, output errors if any
+                }
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'npm test'  // Run the tests for the application
+                dir("${PROJECT_DIR}") {
+                    sh 'npm test'  // Run the tests for the application
+                }
             }
         }
 
         stage('Build') {
             steps {
-                sh 'npm run build'  // Build the application if needed
+                dir("${PROJECT_DIR}") {
+                    sh 'npm run build'  // Build the application if needed
+                }
             }
         }
 
@@ -44,10 +52,12 @@ pipeline {
             steps {
                 script {
                     // Stop any running instance (if applicable)
-                    sh 'pkill -f "node server.js" || echo "No running process found"'
+                    sh 'pkill -f "node" || echo "No running process found"'
 
                     // Start the application
-                    sh 'nohup npm start &'
+                    dir("${PROJECT_DIR}") {
+                        sh 'nohup npm start &'
+                    }
                 }
             }
         }
